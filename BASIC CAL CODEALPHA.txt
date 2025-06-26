@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ff9d;
+            --secondary: #00b7ff;
+            --background: #1a1a2e;
+            --screen: #16213e;
+            --button: rgba(26, 26, 46, 0.8);
+            --button-hover: rgba(0, 255, 157, 0.2);
+            --button-active: rgba(0, 255, 157, 0.3);
+            --operator: #ff2d75;
+            --equals: #00b7ff;
+            --clear: #ff2d75;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--background);
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 350px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.2),
+                        inset 0 0 10px rgba(0, 255, 157, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 255, 157, 0.1);
+            transform: perspective(1000px) rotateX(10deg);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: perspective(1000px) rotateX(10deg) translateY(0); }
+            50% { transform: perspective(1000px) rotateX(10deg) translateY(-10px); }
+            100% { transform: perspective(1000px) rotateX(10deg) translateY(0); }
+        }
+
+        .calculator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(0, 255, 157, 0.1) 0%,
+                rgba(0, 183, 255, 0.1) 100%
+            );
+            z-index: -1;
+            filter: blur(10px);
+        }
+
+        .display {
+            padding: 25px 20px;
+            background: var(--screen);
+            text-align: right;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .display::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            animation: rainbow 3s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .display-content {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+        }
+
+        .expression {
+            font-size: 1rem;
+            opacity: 0.7;
+            height: 20px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            border: none;
+            outline: none;
+            padding: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background: var(--button);
+            color: white;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                var(--button-hover),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:active {
+            background: var(--button-active);
+            transform: scale(0.95);
+        }
+
+        .number {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .operator {
+            background: rgba(26, 26, 46, 0.9);
+            color: var(--operator);
+            font-weight: bold;
+        }
+
+        .equals {
+            background: rgba(0, 183, 255, 0.2);
+            color: var(--equals);
+            grid-row: span 3;
+        }
+
+        .clear {
+            color: var(--clear);
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        .decimal {
+            font-weight: bold;
+        }
+
+        .btn-animate {
+            animation: pulse 0.3s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 400px) {
+            button {
+                padding: 15px;
+                font-size: 1rem;
+            }
+            
+            .display-content {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="expression" id="expression"></div>
+            <div class="display-content" id="display">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button onclick="appendToDisplay('(')">(</button>
+            <button onclick="appendToDisplay(')')">)</button>
+            <button class="operator" onclick="appendToDisplay('/')">÷</button>
+            
+            <button class="number" onclick="appendToDisplay('7')">7</button>
+            <button class="number" onclick="appendToDisplay('8')">8</button>
+            <button class="number" onclick="appendToDisplay('9')">9</button>
+            <button class="operator" onclick="appendToDisplay('*')">×</button>
+            
+            <button class="number" onclick="appendToDisplay('4')">4</button>
+            <button class="number" onclick="appendToDisplay('5')">5</button>
+            <button class="number" onclick="appendToDisplay('6')">6</button>
+            <button class="operator" onclick="appendToDisplay('-')">−</button>
+            
+            <button class="number" onclick="appendToDisplay('1')">1</button>
+            <button class="number" onclick="appendToDisplay('2')">2</button>
+            <button class="number" onclick="appendToDisplay('3')">3</button>
+            <button class="operator" onclick="appendToDisplay('+')">+</button>
+            
+            <button class="number zero" onclick="appendToDisplay('0')">0</button>
+            <button class="decimal" onclick="appendToDisplay('.')">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let currentExpression = '';
+        let resultDisplayed = false;
+
+        const display = document.getElementById('display');
+        const expressionDisplay = document.getElementById('expression');
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+            expressionDisplay.textContent = currentExpression;
+        }
+
+        function appendToDisplay(value) {
+            // Animation
+            event.target.classList.add('btn-animate');
+            setTimeout(() => {
+                event.target.classList.remove('btn-animate');
+            }, 300);
+
+            // Clear the display if a result was just shown and user starts typing numbers
+            if (resultDisplayed && !'+-*/'.includes(value)) {
+                currentInput = '0';
+                currentExpression = '';
+                resultDisplayed = false;
+            }
+
+            if (currentInput === '0' && value !== '.') {
+                if ('+-*/'.includes(value)) {
+                    // If the first input is an operator, treat it as a continuation
+                    currentExpression = currentInput + value;
+                } else {
+                    // Replace the 0 with the new number
+                    currentInput = value;
+                    currentExpression += value;
+                }
+            } else if ('+-*/'.includes(value)) {
+                // Handle operator input
+                if ('+-*/'.includes(currentInput.slice(-1))) {
+                    // Replace the last operator
+                    currentInput = currentInput.slice(0, -1) + value;
+                    currentExpression = currentExpression.slice(0, -1) + value;
+                } else {
+                    // Append the operator
+                    currentInput += value;
+                    currentExpression += value;
+                }
+            } else if (value === '.' && currentInput.includes('.')) {
+                // Prevent multiple decimal points in a number
+                return;
+            } else {
+                // Append the number or decimal
+                currentInput += value;
+                currentExpression += value;
+            }
+            
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            currentExpression = '';
+            resultDisplayed = false;
+            updateDisplay();
+            
+            // Animation
+            event.target.classList.add('btn-animate');
+            setTimeout(() => {
+                event.target.classList.remove('btn-animate');
+            }, 300);
+        }
+
+        function calculate() {
+            try {
+                // Replace × and ÷ with * and / for eval
+                let expression = currentExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                // Handle cases where expression ends with an operator
+                if (/[\+\-\*\/]$/.test(expression)) {
+                    expression = expression.slice(0, -1);
+                }
+                
+                const result = eval(expression);
+                currentInput = String(result);
+                currentExpression = expression + '=' + result;
+                resultDisplayed = true;
+                updateDisplay();
+                
+                // Animation
+                event.target.classList.add('btn-animate');
+                setTimeout(() => {
+                    event.target.classList.remove('btn-animate');
+                }, 300);
+            } catch (error) {
+                currentInput = 'Error';
+                updateDisplay();
+                setTimeout(() => {
+                    currentInput = '0';
+                    currentExpression = '';
+                    updateDisplay();
+                }, 1000);
+            }
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (event) => {
+            const key = event.key;
+            
+            // Map keyboard keys to calculator functions
+            const keyMap = {
+                '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
+                '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+                '+': '+', '-': '-', '*': '*', '/': '/',
+                '.': '.', '(': '(', ')': ')',
+                'Enter': '=', '=': '=',
+                'Escape': 'C', 'Backspace': 'C'
+            };
+            
+            if (key in keyMap) {
+                event.preventDefault();
+                const buttonValue = keyMap[key];
+                
+                if (buttonValue === '=') {
+                    calculate();
+                } else if (buttonValue === 'C') {
+                    clearDisplay();
+                } else {
+                    appendToDisplay(buttonValue);
+                }
+                
+                // Find and animate the corresponding button
+                const buttons = document.querySelectorAll('.buttons button');
+                buttons.forEach(button => {
+                    if (button.textContent === buttonValue || 
+                        (buttonValue === '*' && button.textContent === '×') ||
+                        (buttonValue === '/' && button.textContent === '÷') ||
+                        (buttonValue === '-' && button.textContent === '−') ||
+                        (buttonValue === 'C' && button.textContent === 'C') ||
+                        (buttonValue === '=' && button.textContent === '=')) {
+                        button.classList.add('btn-animate');
+                        setTimeout(() => {
+                            button.classList.remove('btn-animate');
+                        }, 300);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
